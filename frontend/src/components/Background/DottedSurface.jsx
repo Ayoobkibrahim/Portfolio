@@ -8,21 +8,21 @@ const DottedSurface = ({ className = "", theme = "dark" }) => {
     useEffect(() => {
         if (!containerRef.current) return;
 
-        const SEPARATION = 100;
-        const AMOUNTX = 50;
-        const AMOUNTY = 50;
+        const SEPARATION = 150;
+        const AMOUNTX = 40;
+        const AMOUNTY = 60;
 
         // Scene setup
         const scene = new THREE.Scene();
-        // scene.fog = new THREE.Fog(0xffffff, 2000, 10000); // Remove fog to keep dots crisp
+        scene.fog = new THREE.Fog(0xffffff, 2000, 10000);
 
         const camera = new THREE.PerspectiveCamera(
-            75,
+            60,
             window.innerWidth / window.innerHeight,
             1,
             10000
         );
-        camera.position.set(0, 400, 1200); // Adjust camera
+        camera.position.set(0, 355, 1220);
 
         const renderer = new THREE.WebGLRenderer({
             alpha: true,
@@ -30,7 +30,7 @@ const DottedSurface = ({ className = "", theme = "dark" }) => {
         });
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(window.innerWidth, window.innerHeight);
-        // renderer.setClearColor(scene.fog.color, 0);
+        renderer.setClearColor(scene.fog.color, 0);
 
         containerRef.current.appendChild(renderer.domElement);
 
@@ -49,11 +49,9 @@ const DottedSurface = ({ className = "", theme = "dark" }) => {
 
                 positions.push(x, y, z);
                 if (theme === 'dark') {
-                    // Particles are silver-white in dark mode
-                    colors.push(0.7, 0.7, 0.8);
+                    colors.push(0.78, 0.78, 0.78); // ~200/255
                 } else {
-                    // Particles are muted slate-blue in light mode (matches Slate-500)
-                    colors.push(0.4, 0.45, 0.55);
+                    colors.push(0, 0, 0);
                 }
             }
         }
@@ -66,7 +64,7 @@ const DottedSurface = ({ className = "", theme = "dark" }) => {
 
         // Create material
         const material = new THREE.PointsMaterial({
-            size: 6,
+            size: 8,
             vertexColors: true,
             transparent: true,
             opacity: 0.8,
@@ -77,14 +75,13 @@ const DottedSurface = ({ className = "", theme = "dark" }) => {
         const points = new THREE.Points(geometry, material);
         scene.add(points);
 
-        const clock = new THREE.Clock();
+        let count = 0;
         let animationId;
 
         // Animation function
         const animate = () => {
             animationId = requestAnimationFrame(animate);
 
-            const elapsedTime = clock.getElapsedTime();
             const positionAttribute = geometry.attributes.position;
             const positions = positionAttribute.array;
 
@@ -93,21 +90,18 @@ const DottedSurface = ({ className = "", theme = "dark" }) => {
                 for (let iy = 0; iy < AMOUNTY; iy++) {
                     const index = i * 3;
 
-                    // Dynamic wave animation - Increased Amplitude & Speed
+                    // Animate Y position with sine waves
                     positions[index + 1] =
-                        Math.sin((ix + elapsedTime * 0.5) * 0.3) * 50 +
-                        Math.sin((iy + elapsedTime * 0.5) * 0.5) * 50;
+                        Math.sin((ix + count) * 0.3) * 50 +
+                        Math.sin((iy + count) * 0.5) * 50;
 
                     i++;
                 }
             }
 
             positionAttribute.needsUpdate = true;
-
-            // Gentle rotation
-            // points.rotation.y = elapsedTime * 0.05;
-
             renderer.render(scene, camera);
+            count += 0.1;
         };
 
         // Handle window resize
@@ -127,8 +121,9 @@ const DottedSurface = ({ className = "", theme = "dark" }) => {
             scene,
             camera,
             renderer,
-            points,
+            particles: [points],
             animationId,
+            count,
         };
 
         // Cleanup function
@@ -139,22 +134,38 @@ const DottedSurface = ({ className = "", theme = "dark" }) => {
                 cancelAnimationFrame(sceneRef.current.animationId);
 
                 // Clean up Three.js objects
-                if (containerRef.current && sceneRef.current.renderer.domElement) {
-                    containerRef.current.removeChild(sceneRef.current.renderer.domElement);
-                }
+                sceneRef.current.scene.traverse((object) => {
+                    if (object instanceof THREE.Points) {
+                        object.geometry.dispose();
+                        if (Array.isArray(object.material)) {
+                            object.material.forEach((material) => material.dispose());
+                        } else {
+                            object.material.dispose();
+                        }
+                    }
+                });
 
-                sceneRef.current.points.geometry.dispose();
-                sceneRef.current.points.material.dispose();
                 sceneRef.current.renderer.dispose();
+
+                if (containerRef.current && sceneRef.current.renderer.domElement) {
+                    containerRef.current.removeChild(
+                        sceneRef.current.renderer.domElement,
+                    );
+                }
             }
         };
-    }, [theme]); // Re-run when theme changes to update colors
+    }, [theme]); // Re-run when theme changes
 
     return (
         <div
             ref={containerRef}
-            className={`fixed inset-0 -z-10 pointer-events-none ${className}`}
-            style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1, pointerEvents: 'none' }}
+            className={`dotted-surface ${className}`}
+            style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: -10,
+                pointerEvents: 'none'
+            }}
         />
     );
 }

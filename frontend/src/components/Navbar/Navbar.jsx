@@ -19,22 +19,40 @@ const Navbar = ({ theme, toggleTheme }) => {
   ]
 
   useEffect(() => {
+    // Scroll state for navbar appearance
     const handleScroll = () => {
       setScrolled(window.scrollY > 50)
+    }
+    window.addEventListener('scroll', handleScroll)
 
-      // Update active section
-      const sections = navLinks.map(link => link.href.slice(1))
-      for (const section of sections.reverse()) {
-        const element = document.getElementById(section)
-        if (element && window.scrollY >= element.offsetTop - 100) {
-          setActiveSection(section)
-          break
-        }
-      }
+    // Active section detection with IntersectionObserver
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -35% 0px', // Active when section is near center/top
+      threshold: 0.1
     }
 
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    const observerCallback = (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id)
+        }
+      })
+    }
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions)
+    const sections = navLinks.map(link => document.getElementById(link.href.slice(1)))
+
+    sections.forEach(section => {
+      if (section) observer.observe(section)
+    })
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      sections.forEach(section => {
+        if (section) observer.unobserve(section)
+      })
+    }
   }, [])
 
   const handleNavClick = (e, href) => {
@@ -42,7 +60,15 @@ const Navbar = ({ theme, toggleTheme }) => {
     setIsOpen(false)
     const element = document.querySelector(href)
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' })
+      // Offset for fixed navbar (approx 80px)
+      const offset = 80
+      const elementPosition = element.getBoundingClientRect().top
+      const offsetPosition = elementPosition + window.pageYOffset - offset
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      })
     }
   }
 
