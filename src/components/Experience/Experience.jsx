@@ -13,10 +13,10 @@ const Experience = ({ isInView }) => {
       duration: '1y 3m',
       description: 'Led the integration of wallet systems and optimized the EV charging notification service.',
       details: [
-        'Integrated secure wallet systems for seamless transactions.',
-        'Developed real-time in-app notification services.',
-        'Established robust MQTT protocols for EV charger communication.',
-        'Optimized UI/UX for better user engagement.'
+        'Contributed to a Razorpay-based wallet system, ensuring smooth transaction flows and proper handling of success and failure scenarios.',
+        'Contributed to the implementation of an in-app notification system for offers and emergency alerts, improving user communication for 100,000+ users on an EV charging platform.',
+        'Worked on MQTT-based real-time communication between electric vehicle chargers and backend systems.',
+        'Collaborated with designers and developers to design and optimize user-friendly interfaces, enhancing overall usability and user experience.'
       ],
       skills: ['Flutter', 'Razorpay', 'MQTT', 'UI/UX', 'Ev Charging'],
       current: false,
