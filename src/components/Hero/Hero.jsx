@@ -129,8 +129,6 @@ const Hero = () => {
                 2000,
                 'Cloud Engineer',
                 2000,
-                'Platform Engineer',
-                2000,
                 'Site Reliability Engineer',
                 2000,
               ]}
